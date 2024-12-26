@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code Scanner</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    video {
+      width: 100%;
+      max-width: 400px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+    }
+    canvas {
+      display: none;
+    }
+    #output {
+      margin-top: 20px;
+      font-size: 1.2em;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <h1>QR Code Scanner</h1>
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas"></canvas>
+  <div id="output">Aponte a câmera para um QR Code</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const output = document.getElementById('output');
+    const canvasContext = canvas.getContext('2d');
+
+    // Função para iniciar a câmera
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        video.srcObject = stream;
+      } catch (error) {
+        output.textContent = 'Erro ao acessar a câmera: ' + error.message;
+      }
+    }
+
+    // Função para capturar e processar frames
+    function scanQRCode() {
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvasContext.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const imageData = canvasContext.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+        if (code) {
+          output.textContent = `QR Code detectado: ${code.data}`;
+        } else {
+          output.textContent = 'Aponte a câmera para um QR Code';
+        }
+      }
+      requestAnimationFrame(scanQRCode);
+    }
+
+    // Iniciar a câmera e começar o scanner
+    startCamera().then(() => {
+      video.addEventListener('play', scanQRCode);
+    });
+  </script>
+</body>
+</html>
