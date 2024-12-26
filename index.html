@@ -38,6 +38,7 @@
     const canvas = document.getElementById('canvas');
     const output = document.getElementById('output');
     const canvasContext = canvas.getContext('2d');
+    let lastScannedCode = null;
 
     // Função para iniciar a câmera
     async function startCamera() {
@@ -60,7 +61,17 @@
         const code = jsQR(imageData.data, imageData.width, imageData.height);
 
         if (code) {
-          output.textContent = `QR Code detectado: ${code.data}`;
+          if (code.data !== lastScannedCode) { // Evita abrir o mesmo link repetidamente
+            lastScannedCode = code.data;
+            output.textContent = `QR Code detectado: ${code.data}`;
+            
+            // Verifica se é um link válido e abre
+            if (code.data.startsWith("http://") || code.data.startsWith("https://")) {
+              window.location.href = code.data;
+            } else {
+              output.textContent = `Conteúdo não é um link: ${code.data}`;
+            }
+          }
         } else {
           output.textContent = 'Aponte a câmera para um QR Code';
         }
